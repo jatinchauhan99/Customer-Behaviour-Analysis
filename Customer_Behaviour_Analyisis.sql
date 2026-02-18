@@ -4,11 +4,14 @@ from customer
 group by gender
 
 
---Q2. Which customers used a discount but still spent more than the average purchase amount? 
-select customer_id, purchase_amount 
-from customer 
-where discount_applied = 'Yes' and purchase_amount >= (select AVG(purchase_amount) from customer)
-
+--Q2. Which season has the highest sales volume?
+SELECT season,
+       COUNT(*) AS total_sales,
+       ROUND(SUM(purchase_amount), 2) AS total_revenue,
+       ROUND(AVG(purchase_amount), 2) AS avg_purchase
+FROM customer
+GROUP BY season
+ORDER BY total_sales DESC;
 
 -- Q3. Which are the top 5 products with the highest average review rating?
 select item_purchased, round(avg(review_rating::numeric),2) as "Average Product Rating"
@@ -18,11 +21,11 @@ order by avg(review_rating) desc
 limit 5
 
 --Q4. Compare the average Purchase Amounts between Standard and Express Shipping. 
-select shipping_type, 
-ROUND(AVG(purchase_amount),2)
-from customer
-where shipping_type in ('Standard','Express')
-group by shipping_type;
+SELECT customer_id,purchase_amount,review_rating,item_purchased,category
+FROM customer
+WHERE purchase_amount > 70 
+  AND review_rating < 3.0
+ORDER BY purchase_amount DESC
 
 --Q5. Do subscribed customers spend more? Compare average spend and total revenue 
 --between subscribers and non-subscribers.
@@ -43,35 +46,25 @@ ORDER BY discount_rate DESC
 LIMIT 5;
 
 
---Q7. Segment customers into New, Returning, and Loyal based on their total 
--- number of previous purchases, and show the count of each segment. 
-with customer_type as (
-select customer_id, previous_purchases,
-case
-	when previous_purchases = 1 then 'New'
-	when previous_purchases between 2 and 10 then 'Returning'
-	else 'Loyal'
-	end as customer_segment
-from customer
-)
-
-select customer_segment, count(*) as "Number of cusotmers"
-from customer_type
-group by customer_segment
+--Q7 Which are top 10 revenue-generating states ?
+SELECT location,
+       COUNT(*) AS total_orders,
+       ROUND(SUM(purchase_amount), 2) AS total_revenue,
+       ROUND(AVG(purchase_amount), 2) AS avg_order_value
+FROM customer
+GROUP BY location
+ORDER BY total_revenue DESC
+LIMIT 10;
 
 
---Q8. What are the top 3 most purchased products within each category?
-with item_counts as (
-select category, item_purchased,
-count(customer_id) as total_orders,
-row_number() over(partition by category order by count(customer_id) desc) as item_rank
-from customer
-group by category, item_purchased
-)
-
-select item_rank, category, item_purchased, total_orders
-from item_counts
-where item_rank <= 3
+--Q8 Payment method usage and revenue
+SELECT payment_method,
+       COUNT(*) AS transaction_count,
+       ROUND(SUM(purchase_amount), 2) AS total_revenue,
+       ROUND(AVG(purchase_amount), 2) AS avg_transaction_value
+FROM customer
+GROUP BY payment_method
+ORDER BY transaction_count DESC;
 
 
 --Q9. Are customers who are repeat buyers (more than 5 previous purchases) also likely to subscribe?
@@ -87,4 +80,5 @@ select * from customer limit 5
 select age_group, sum(purchase_amount) as total_revenue
 from customer
 group by age_group
+
 order by total_revenue desc
