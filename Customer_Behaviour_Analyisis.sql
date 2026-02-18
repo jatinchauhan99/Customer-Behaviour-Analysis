@@ -20,7 +20,7 @@ group by item_purchased
 order by avg(review_rating) desc
 limit 5
 
---Q4. Compare the average Purchase Amounts between Standard and Express Shipping. 
+--Q4. Find customers with high purchase amounts but low review ratings
 SELECT customer_id,purchase_amount,review_rating,item_purchased,category
 FROM customer
 WHERE purchase_amount > 70 
@@ -82,3 +82,4 @@ from customer
 group by age_group
 
 order by total_revenue desc
+
